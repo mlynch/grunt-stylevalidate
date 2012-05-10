@@ -1,1 +1,1 @@
-This grunt plugin enforces style guidelines on javascript code. There are two possible operations: stylevalidate and styleformat. *stylevalidate* runs a validation check against the style definition. *styleformat* actually modifies the input source files and enforces style guidelines.
+This grunt plugin enforces style guidelines on javascript code. There are two possible operations: stylevalidate and styleformat. _stylevalidate_ runs a validation check against the style definition. _styleformat_ actually modifies the input source files and enforces style guidelines.
