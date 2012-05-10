@@ -36,11 +36,11 @@ module.exports = function(grunt) {
 	});
 
 	grunt.registerHelper('styleformat', function(files, done) {
-	 grunt.utils.spawn({
-		 cmd: 'krasota',
-		 args: ['-i', files[0], '-b', 'krasota/lib/beautifiers/join-vars', '-b', 'krasota/lib/beautifiers/always-semicolons']
-	 }, function(error, output) {
-		 console.log('\n', output.toString());
-	 });
+		grunt.utils.spawn({
+			cmd: 'krasota',
+			args: ['-i', files[0], '-b', 'krasota/lib/beautifiers/join-vars', '-b', 'krasota/lib/beautifiers/always-semicolons']
+			}, function(error, output) {
+				console.log('\n', output.toString());
+		});
 	});
 };
