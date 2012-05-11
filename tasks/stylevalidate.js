@@ -7,7 +7,9 @@
  */
 
 var fs = require('fs');
+var file = require('file');
 var diff = require('diff');
+var codepainter = require('codepainter');
 
 module.exports = function(grunt) {
 
@@ -17,6 +19,42 @@ module.exports = function(grunt) {
 	// ==========================================================================
 	// TASKS
 	// ==========================================================================
+
+	function runCodePainter(directory, style, callback) {
+		file.walk(directory, function(unused, dirPath, dirs, files) {
+			for(var i = 0; i < files.length; i++) {
+				var file = files[i];
+
+				var input = fs.createReadStream(file);
+				input.pause();
+
+				/*
+				var stream = process.stdout;
+
+				codepainter.transform(input, styleObj, stream, function() {
+					console.log(stream);
+				});
+				*/
+
+				grunt.utils.spawn({
+					cmd: '/Users/max/Projects/codepainter/bin/codepaint',
+					args: ['--style', style, '-i', file]
+					}, function(error, output) {
+
+						fs.readFile(files[0], 'utf-8', function(err, data) {
+							if(err) {
+								console.error('Unable to open source file: %s', err);
+								process.exit(1);
+							}
+
+							callback(files[0], data, output.toString());
+							//var diffResult = compareFormattedWithSource(files[0], data, output.toString());
+						});
+				});
+			}
+			//callback(dirPath);
+		});
+	}
 
 	grunt.registerMultiTask('stylevalidate', 'Validate Javascript style against a style definition', function() {
 		var done = this.async(), 
@@ -56,22 +94,11 @@ module.exports = function(grunt) {
 		});
 	});
 
-	grunt.registerHelper('styleformatpainter', function(files, done) {
-		grunt.utils.spawn({
-			cmd: '/Users/max/Projects/codepainter/bin/codepaint',
-			args: ['--style', '{"QuoteType": "double", "SpaceAfterControlStatements": "present"}', '-i', files[0]]
-			}, function(error, output) {
-
-				fs.readFile(files[0], 'utf-8', function(err, data) {
-					if(err) {
-						console.error('Unable to open source file: %s', err);
-						process.exit(1);
-					}
-
-					var diffResult = compareFormattedWithSource(files[0], data, output.toString());
-
-					done(diffResult);
-				});
+	grunt.registerHelper('styleformatpainter', function(files, style, done) {
+		runCodePainter(files[0], style, function(filename, sourceData, outputData) {
+			console.log(filename, sourceData, outputData);
+		}, function(err) {
+			done(!!err);
 		});
 	});
 
