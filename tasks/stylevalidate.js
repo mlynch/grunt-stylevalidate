@@ -72,7 +72,7 @@ module.exports = function(grunt) {
 			files = grunt.file.expand(this.file.src);
 		console.log('Style formatting', files, done);
 		grunt.helper('styleformat', files, function(error, result) {
-			console.log(error, result);
+			//console.log(error, result);
 		});
 	});
 
@@ -81,14 +81,14 @@ module.exports = function(grunt) {
 			cmd: 'krasota',
 			args: ['-i', files[0], '-b', 'krasota/lib/beautifiers/join-vars', '-b', 'krasota/lib/beautifiers/always-semicolons']
 			}, function(error, output) {
-				console.log('\n', output.toString());
+				//console.log('\n', output.toString());
 		});
 	});
 	
 	grunt.registerMultiTask('styleformatpainter', 'Format Javascript code into a desired style', function() {
 		var done = this.async(), 
 			files = grunt.file.expand(this.file.src);
-		console.log('Style formatting', files, done);
+		//console.log('Style formatting', files, done);
 		grunt.helper('styleformatpainter', files, function(error, result) {
 			console.log(error, result);
 		});
@@ -96,14 +96,24 @@ module.exports = function(grunt) {
 
 	grunt.registerHelper('styleformatpainter', function(files, style, done) {
 		runCodePainter(files[0], style, function(filename, sourceData, outputData) {
-			console.log(filename, sourceData, outputData);
+			//console.log(filename, sourceData, outputData);
+			var diffed = compareFormattedWithSource(filename, sourceData, outputData);
+			//console.log('Found', diffed.length, 'style guideline violations');
+
+			//console.log(outputData);
+
+			for(var i = 0; i < diffed.length; i++) {
+				var change = diffed[i];
+				console.log(change);
+			}
 		}, function(err) {
 			done(!!err);
 		});
 	});
 
 	function compareFormattedWithSource(originalFileName, original, formatted) {
-		var diffed = diff.createPatch(originalFileName, original, formatted, "Old Header", "New Header");
+		//var diffed = diff.createPatch(originalFileName, original, formatted, "Old Header", "New Header");
+		var diffed = diff.diffLines(original, formatted, "Old Header", "New Header");
 		console.log(diffed);
 		return diffed;
 	}
