@@ -6,6 +6,9 @@
  * Licensed under the MIT license.
  */
 
+var fs = require('fs');
+var diff = require('diff');
+
 module.exports = function(grunt) {
 
 	// Please see the grunt documentation for more information regarding task and
@@ -43,4 +46,38 @@ module.exports = function(grunt) {
 				console.log('\n', output.toString());
 		});
 	});
+	
+	grunt.registerMultiTask('styleformatpainter', 'Format Javascript code into a desired style', function() {
+		var done = this.async(), 
+			files = grunt.file.expand(this.file.src);
+		console.log('Style formatting', files, done);
+		grunt.helper('styleformatpainter', files, function(error, result) {
+			console.log(error, result);
+		});
+	});
+
+	grunt.registerHelper('styleformatpainter', function(files, done) {
+		grunt.utils.spawn({
+			cmd: '/Users/max/Projects/codepainter/bin/codepaint',
+			args: ['--style', '{"QuoteType": "double", "SpaceAfterControlStatements": "present"}', '-i', files[0]]
+			}, function(error, output) {
+
+				fs.readFile(files[0], 'utf-8', function(err, data) {
+					if(err) {
+						console.error('Unable to open source file: %s', err);
+						process.exit(1);
+					}
+
+					var diffResult = compareFormattedWithSource(files[0], data, output.toString());
+
+					done(diffResult);
+				});
+		});
+	});
+
+	function compareFormattedWithSource(originalFileName, original, formatted) {
+		var diffed = diff.createPatch(originalFileName, original, formatted, "Old Header", "New Header");
+		console.log(diffed);
+		return diffed;
+	}
 };

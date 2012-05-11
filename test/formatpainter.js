@@ -1,7 +1,6 @@
 var grunt = require('grunt');
 
-/*
-exports['styleformat'] = {
+exports['styleformatpainter'] = {
 	setUp: function(done) {
 		// setup here
 		done();
@@ -9,7 +8,7 @@ exports['styleformat'] = {
 	'helper': function(test) {
 		test.expect(1);
 		// tests here
-		grunt.helper('styleformat', ['test/badformat.js'], function(error, result) {
+		grunt.helper('styleformatpainter', ['test/badformat.js'], function(error, result) {
 			grunt.log.write('HELLO', result);
 			if (error) {
 				console.log(error);
@@ -22,4 +21,3 @@ exports['styleformat'] = {
 		});
 	}
 };
-*/

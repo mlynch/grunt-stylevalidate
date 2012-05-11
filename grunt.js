@@ -1,21 +1,21 @@
 module.exports = function(grunt) {
 
   // Project configuration.
-  grunt.initConfig({
-    stylevalidate: {
-      valid: "test/valid.js",
-      invalid: "test/*.js"
-    },
-    test: {
-      files: ['test/**/*.js']
-    },
-    lint: {
-      files: ['grunt.js', 'tasks/**/*.js', 'test/**/*.js']
-    },
-    watch: {
-      files: '<config:lint.files>',
-      tasks: 'default'
-    },
+	grunt.initConfig({
+		stylevalidate: {
+			valid: "test/valid.js",
+			invalid: "test/*.js"
+		},
+		test: {
+			files: ['test/**/*.js']
+		},
+		lint: {
+			files: ['grunt.js', 'tasks/**/*.js', 'test/**/*.js']
+		},
+		watch: {
+			files: '<config:lint.files>',
+			tasks: 'default'
+		},
     jshint: {
       options: {
         curly: true,
@@ -31,13 +31,13 @@ module.exports = function(grunt) {
         node: true,
         es5: true
       },
-      globals: {}
-    }
-  });
+			globals: {}
+		}
+	});
 
-  // Load local tasks.
-  grunt.loadTasks('tasks');
+	// Load local tasks.
+	grunt.loadTasks('tasks');
 
-  // Default task.
-  grunt.registerTask('default', 'lint test');
+	// Default task.
+	grunt.registerTask('default', 'lint test');
 };
