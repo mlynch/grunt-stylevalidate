@@ -51,11 +51,35 @@ module.exports = function(grunt) {
 		var done = this.async(), 
 			files = grunt.file.expand(this.file.src);
 		grunt.helper('styleformat', files, function(error, result) {
-
+			console.log(error, result);
 		});
 	});
 	
-	grunt.registerHelper('styleformat', function(files, done) {
+	grunt.registerHelper('styleformat', function(style, files, done) {
+		var result = [];
+		//for(var i = 0; i < files.length; i++) {
+		async.forEach(files, function(file, callback) {
+			console.log('Validating file', file);
+			console.log('Running code painter');
+			runCodePainter(file, style, function(filename, sourceData, outputData) {
+				result.push({
+					file: file,
+					result: 'success',
+					output: outputData
+				});
+				callback();
+			}, function(err) {
+				result.push({
+					file: file,
+					result: 'error',
+					message: err
+				});
+				callback();
+			});
+		}, function(err) {
+			console.log('Done with code painter');
+			done(null, result);
+		});
 	});
 
 	/*
