@@ -6,6 +6,7 @@
  * Licensed under the MIT license.
  */
 
+var async = require('async');
 var fs = require('fs');
 var file = require('file');
 var diff = require('diff');
@@ -28,14 +29,6 @@ module.exports = function(grunt) {
 				var input = fs.createReadStream(file);
 				input.pause();
 
-				/*
-				var stream = process.stdout;
-
-				codepainter.transform(input, styleObj, stream, function() {
-					console.log(stream);
-				});
-				*/
-
 				grunt.utils.spawn({
 					cmd: '/Users/max/Projects/codepainter/bin/codepaint',
 					args: ['--style', style, '-i', file]
@@ -48,25 +41,24 @@ module.exports = function(grunt) {
 							}
 
 							callback(files[0], data, output.toString());
-							//var diffResult = compareFormattedWithSource(files[0], data, output.toString());
 						});
 				});
 			}
-			//callback(dirPath);
 		});
 	}
 
-	grunt.registerMultiTask('stylevalidate', 'Validate Javascript style against a style definition', function() {
+	grunt.registerMultiTask('styleformat', 'Validate Javascript style against a style definition', function() {
 		var done = this.async(), 
 			files = grunt.file.expand(this.file.src);
-		grunt.helper('stylevalidate', files, function(error, result) {
+		grunt.helper('styleformat', files, function(error, result) {
 
 		});
 	});
 	
-	grunt.registerHelper('stylevalidate', function(files, done) {
+	grunt.registerHelper('styleformat', function(files, done) {
 	});
-	
+
+	/*
 	grunt.registerMultiTask('styleformat', 'Format Javascript code into a desired style', function() {
 		var done = this.async(), 
 			files = grunt.file.expand(this.file.src);
@@ -84,37 +76,56 @@ module.exports = function(grunt) {
 				//console.log('\n', output.toString());
 		});
 	});
+	*/
 	
-	grunt.registerMultiTask('styleformatpainter', 'Format Javascript code into a desired style', function() {
+	grunt.registerMultiTask('stylevalidate', 'Format Javascript code into a desired style', function() {
 		var done = this.async(), 
 			files = grunt.file.expand(this.file.src);
 		//console.log('Style formatting', files, done);
-		grunt.helper('styleformatpainter', files, function(error, result) {
+		grunt.helper('stylevalidate', files, function(error, result) {
 			console.log(error, result);
 		});
 	});
 
-	grunt.registerHelper('styleformatpainter', function(files, style, done) {
-		runCodePainter(files[0], style, function(filename, sourceData, outputData) {
-			//console.log(filename, sourceData, outputData);
-			var diffed = compareFormattedWithSource(filename, sourceData, outputData);
-			//console.log('Found', diffed.length, 'style guideline violations');
+	grunt.registerHelper('stylevalidate', function(files, style, done) {
+		var result = [];
+		//for(var i = 0; i < files.length; i++) {
+		async.forEach(files, function(file, callback) {
+			console.log('Validating file', file);
+			console.log('Running code painter');
+			runCodePainter(file, style, function(filename, sourceData, outputData) {
+				console.log('Got code painter');
+				var patch = diff.createPatch(filename, sourceData, outputData, "Old Header", "New Header");
+				var diffed = diff.diffLines(sourceData, outputData, "Old Header", "New Header");
 
-			//console.log(outputData);
-
-			for(var i = 0; i < diffed.length; i++) {
-				var change = diffed[i];
-				console.log(change);
-			}
+				if(diffed.length > 0) {
+					console.log('\nStyle validation failed\n');
+					result.push({
+						file: file,
+						result: 'error',
+						diff: patch
+					});
+				}
+				result.push({
+					file: file,
+					result: 'success'
+				});
+				callback();
+			}, function(err) {
+				result.push({
+					file: file,
+					result: 'error',
+					message: err
+				});
+				callback();
+			});
 		}, function(err) {
-			done(!!err);
+			console.log('Done with code painter');
+			done(null, result);
 		});
+
 	});
 
 	function compareFormattedWithSource(originalFileName, original, formatted) {
-		//var diffed = diff.createPatch(originalFileName, original, formatted, "Old Header", "New Header");
-		var diffed = diff.diffLines(original, formatted, "Old Header", "New Header");
-		console.log(diffed);
-		return diffed;
 	}
 };
