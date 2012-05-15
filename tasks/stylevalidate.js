@@ -25,7 +25,6 @@ module.exports = function(grunt) {
 		file.walk(directory, function(unused, dirPath, dirs, files) {
 			for(var i = 0; i < files.length; i++) {
 				var file = files[i];
-				console.log('Code painter on file', file);
 
 				var input = fs.createReadStream(file);
 				input.pause();
@@ -60,8 +59,6 @@ module.exports = function(grunt) {
 		var result = [];
 
 		async.forEach(dirs, function(dir, callback) {
-			console.log('Validating directory', dir);
-			console.log('Running code painter');
 			runCodePainter(dir, style, function(filename, sourceData, outputData) {
 				result.push({
 					file: filename,
@@ -78,7 +75,6 @@ module.exports = function(grunt) {
 				callback();
 			});
 		}, function(err) {
-			console.log('Done with code painter');
 			done(null, result);
 		});
 	});
@@ -98,7 +94,7 @@ module.exports = function(grunt) {
 	grunt.registerMultiTask('stylevalidate', 'Format Javascript code into a desired style', function() {
 		var done = this.async(), 
 			files = grunt.file.expand(this.file.src);
-		//console.log('Style formatting', files, done);
+
 		grunt.helper('stylevalidate', files, function(error, result) {
 			console.log(error, result);
 		});
@@ -108,15 +104,11 @@ module.exports = function(grunt) {
 		var result = [];
 		//for(var i = 0; i < files.length; i++) {
 		async.forEach(dirs, function(dir, callback) {
-			console.log('Validating directory', dir);
-			console.log('Running code painter');
 			runCodePainter(dir, style, function(filename, sourceData, outputData) {
-				console.log('Got code painter');
 				var patch = diff.createPatch(filename, sourceData, outputData, "Old Header", "New Header");
 				var diffed = diff.diffLines(sourceData, outputData, "Old Header", "New Header");
 
 				if(diffed.length > 0) {
-					console.log('\nStyle validation failed\n');
 					result.push({
 						file: filename,
 						result: 'error',
@@ -137,7 +129,6 @@ module.exports = function(grunt) {
 				callback();
 			});
 		}, function(err) {
-			console.log('Done with code painter');
 			done(null, result);
 		});
 
