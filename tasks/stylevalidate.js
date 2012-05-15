@@ -25,6 +25,7 @@ module.exports = function(grunt) {
 		file.walk(directory, function(unused, dirPath, dirs, files) {
 			for(var i = 0; i < files.length; i++) {
 				var file = files[i];
+				console.log('Code painter on file', file);
 
 				var input = fs.createReadStream(file);
 				input.pause();
@@ -49,29 +50,28 @@ module.exports = function(grunt) {
 
 	grunt.registerMultiTask('styleformat', 'Validate Javascript style against a style definition', function() {
 		var done = this.async(), 
-			files = grunt.file.expand(this.file.src);
-		grunt.helper('styleformat', files, function(error, result) {
+			dirs = grunt.file.expand(this.file.src);
+		grunt.helper('styleformat', dirs, function(error, result) {
 			console.log(error, result);
 		});
 	});
 	
-	grunt.registerHelper('styleformat', function(files, style, done) {
+	grunt.registerHelper('styleformat', function(dirs, style, done) {
 		var result = [];
-		//for(var i = 0; i < files.length; i++) {
-		console.log('STYLEFORMAT', files);
-		async.forEach(files, function(file, callback) {
-			console.log('Validating file', file);
+
+		async.forEach(dirs, function(dir, callback) {
+			console.log('Validating directory', dir);
 			console.log('Running code painter');
-			runCodePainter(file, style, function(filename, sourceData, outputData) {
+			runCodePainter(dir, style, function(filename, sourceData, outputData) {
 				result.push({
-					file: file,
+					file: filename,
 					result: 'success',
 					output: outputData
 				});
 				callback();
 			}, function(err) {
 				result.push({
-					file: file,
+					file: filename,
 					result: 'error',
 					message: err
 				});
@@ -84,15 +84,7 @@ module.exports = function(grunt) {
 	});
 
 	/*
-	grunt.registerMultiTask('styleformat', 'Format Javascript code into a desired style', function() {
-		var done = this.async(), 
-			files = grunt.file.expand(this.file.src);
-		console.log('Style formatting', files, done);
-		grunt.helper('styleformat', files, function(error, result) {
-			//console.log(error, result);
-		});
-	});
-
+	Old krasota stuff
 	grunt.registerHelper('styleformat', function(files, done) {
 		grunt.utils.spawn({
 			cmd: 'krasota',
@@ -112,13 +104,13 @@ module.exports = function(grunt) {
 		});
 	});
 
-	grunt.registerHelper('stylevalidate', function(files, style, done) {
+	grunt.registerHelper('stylevalidate', function(dirs, style, done) {
 		var result = [];
 		//for(var i = 0; i < files.length; i++) {
-		async.forEach(files, function(file, callback) {
-			console.log('Validating file', file);
+		async.forEach(dirs, function(dir, callback) {
+			console.log('Validating directory', dir);
 			console.log('Running code painter');
-			runCodePainter(file, style, function(filename, sourceData, outputData) {
+			runCodePainter(dir, style, function(filename, sourceData, outputData) {
 				console.log('Got code painter');
 				var patch = diff.createPatch(filename, sourceData, outputData, "Old Header", "New Header");
 				var diffed = diff.diffLines(sourceData, outputData, "Old Header", "New Header");
@@ -126,19 +118,19 @@ module.exports = function(grunt) {
 				if(diffed.length > 0) {
 					console.log('\nStyle validation failed\n');
 					result.push({
-						file: file,
+						file: filename,
 						result: 'error',
 						diff: patch
 					});
 				}
 				result.push({
-					file: file,
+					file: filename,
 					result: 'success'
 				});
 				callback();
 			}, function(err) {
 				result.push({
-					file: file,
+					file: filename,
 					result: 'error',
 					message: err
 				});
@@ -150,7 +142,4 @@ module.exports = function(grunt) {
 		});
 
 	});
-
-	function compareFormattedWithSource(originalFileName, original, formatted) {
-	}
 };

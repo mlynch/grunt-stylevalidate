@@ -15,10 +15,7 @@ exports['stylevalidate'] = {
 			}
 
 			test.ok(result, 'Errors detected in style validation');
-			/*
-			test.deepEqual(result, [
-			], 'three errors from test/badformat.js');
-			*/
+
 			test.done();
 		});
 	}
