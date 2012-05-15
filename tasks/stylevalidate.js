@@ -55,9 +55,10 @@ module.exports = function(grunt) {
 		});
 	});
 	
-	grunt.registerHelper('styleformat', function(style, files, done) {
+	grunt.registerHelper('styleformat', function(files, style, done) {
 		var result = [];
 		//for(var i = 0; i < files.length; i++) {
+		console.log('STYLEFORMAT', files);
 		async.forEach(files, function(file, callback) {
 			console.log('Validating file', file);
 			console.log('Running code painter');
