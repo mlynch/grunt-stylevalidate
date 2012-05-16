@@ -3,8 +3,13 @@ module.exports = function (grunt) {
 	// Project configuration.
 	grunt.initConfig({
 		stylevalidate: {
-			valid: "test/valid.js",
-			invalid: "test/*.js"
+			dist: {
+				src: ["test/examples"],
+				style: { 
+					"QuoteType": "double",
+					"SpaceAfterControlStatements": "present"
+				}
+			}
 		},
 		test: {
 			files: ['test/**/*.js']

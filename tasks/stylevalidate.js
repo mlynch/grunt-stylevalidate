@@ -97,8 +97,18 @@ module.exports = function (grunt) {
 		var done = this.async(), 
 			files = grunt.file.expand(this.file.src);
 
-		grunt.helper('stylevalidate', files, function (error, result) {
-			console.log(error, result);
+		grunt.helper('stylevalidate', files, this.data.style, function (error, result) {
+			//console.log(error, result);
+			for(var i = 0; i < result.length; i++) {
+				var entry = result[i];
+
+				if(entry.result === "success") {
+					grunt.log.writeln(entry.filename + ": valid");
+				} else {
+					grunt.log.writeln(entry.filename + ": invalid");
+					grunt.log.writeln(entry.diff);
+				}
+			}
 		});
 	});
 
