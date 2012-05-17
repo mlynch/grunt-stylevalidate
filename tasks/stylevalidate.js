@@ -36,13 +36,14 @@ module.exports = function (grunt) {
 					cmd: '/Users/max/Projects/codepainter/bin/codepaint',
 					args: ['--style', style, '-i', file]
 				}, function (error, output) {
-					fs.readFile(files[0], 'utf-8', function (err, data) {
+          console.log('READING', file);
+					fs.readFile(file, 'utf-8', function (err, data) {
 						if (err) {
 							console.error('Unable to open source file: %s', err);
 							process.exit(1);
 						}
 
-						callback(files[0], data, output.toString());
+						callback(file, data, output.toString());
 					});
 				});
 			}
@@ -97,28 +98,48 @@ module.exports = function (grunt) {
 		var done = this.async(), 
 			files = grunt.file.expand(this.file.src);
 
-		grunt.helper('stylevalidate', files, this.data.style, function (error, result) {
+		grunt.helper('stylevalidate', files, JSON.stringify( this.data.style ), function (error, result) {
 			//console.log(error, result);
 			for(var i = 0; i < result.length; i++) {
 				var entry = result[i];
 
 				if(entry.result === "success") {
-					grunt.log.writeln(entry.filename + ": valid");
+					grunt.log.writeln(entry.file + ": valid");
 				} else {
-					grunt.log.writeln(entry.filename + ": invalid");
-					grunt.log.writeln(entry.diff);
+					grunt.log.writeln(entry.file + ": invalid");
+					//grunt.log.writeln(entry.diff);
 				}
 			}
 		});
 	});
 
+
 	grunt.registerHelper('stylevalidate', function (dirs, style, done) {
 		var result = [];
-		//for(var i = 0; i < files.length; i++) {
+
+    function printDiffLine(line) {
+      var value = line.value;
+      if (line.added) {
+        //value = value.replace(/\n/g, '\n\\n');
+        console.log(value.green);
+      } else if(line.removed) {
+        //value = value.replace(/\n/g, '\n\\n');
+        console.log(value.red);
+      } else {
+        console.log(value);
+      }
+    }
+    
 		async.forEach(dirs, function (dir, callback) {
 			runCodePainter(dir, style, function (filename, sourceData, outputData) {
 				var patch = diff.createPatch(filename, sourceData, outputData, "Old Header", "New Header");
 				var diffed = diff.diffLines(sourceData, outputData, "Old Header", "New Header");
+
+        for(var i = 0; i < diffed.length; i++) {
+          var line = diffed[i];
+          printDiffLine( line );
+          //console.log(line);
+        }
 
 				if(diffed.length > 0) {
 					result.push({
@@ -126,11 +147,12 @@ module.exports = function (grunt) {
 						result: 'error',
 						diff: patch
 					});
-				}
-				result.push({
-					file: filename,
-					result: 'success'
-				});
+				} else {
+          result.push({
+            file: filename,
+            result: 'success'
+          });
+        }
 				callback();
 			}, function (err) {
 				result.push({
