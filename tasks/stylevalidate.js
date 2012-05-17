@@ -10,9 +10,50 @@ var async = require('async');
 var fs = require('fs');
 var file = require('file');
 var diff = require('diff');
+var path = require('path');
 var codepainter = require('codepainter');
 
 module.exports = function (grunt) {
+
+  /**
+   * Offers functionality similar to mkdir -p
+   *
+   * Asynchronous operation. No arguments other than a possible exception
+   * are given to the completion callback.
+   */
+  function mkdir_p(path, mode, callback, position) {
+      mode = mode || 777;
+      position = position || 0;
+      var parts = require('path').normalize(path).split('/');
+
+      if (position >= parts.length) {
+          if (callback) {
+              return callback();
+          } else {
+              return true;
+          }
+      }
+
+      var directory = parts.slice(0, position + 1).join('/');
+      fs.stat(directory, function(err) {
+          if (err === null) {
+              mkdir_p(path, mode, callback, position + 1);
+          } else {
+              fs.mkdir(directory, mode, function (err) {
+                  if (err) {
+                      if (callback) {
+                          return callback(err);
+                      } else {
+                          throw err;
+                      }
+                  } else {
+                      mkdir_p(path, mode, callback, position + 1);
+                  }
+              });
+          }
+      });
+  }
+    
 
 	// Please see the grunt documentation for more information regarding task and
 	// helper creation: https://github.com/cowboy/grunt/blob/master/docs/toc.md
@@ -36,7 +77,6 @@ module.exports = function (grunt) {
 					cmd: '/Users/max/Projects/codepainter/bin/codepaint',
 					args: ['--style', style, '-i', file]
 				}, function (error, output) {
-          console.log('READING', file);
 					fs.readFile(file, 'utf-8', function (err, data) {
 						if (err) {
 							console.error('Unable to open source file: %s', err);
@@ -53,33 +93,45 @@ module.exports = function (grunt) {
 	grunt.registerMultiTask('styleformat', 'Validate Javascript style against a style definition', function () {
 		var done = this.async(), 
 			dirs = grunt.file.expand(this.file.src);
-		grunt.helper('styleformat', dirs, function (error, result) {
-			console.log(error, result);
+		grunt.helper('styleformat', dirs, JSON.stringify( this.data.style ), this.data.outputDir, function (error, result) {
+      if( !error ) {
+        grunt.log.writeln('Successfully formatted'.green);
+      }
+			//console.log(error, result);
 		});
 	});
 	
-	grunt.registerHelper('styleformat', function (dirs, style, done) {
+	grunt.registerHelper('styleformat', function (dirs, style, outputDir, done) {
 		var result = [];
 
-		async.forEach(dirs, function (dir, callback) {
-			runCodePainter(dir, style, function (filename, sourceData, outputData) {
-				result.push({
-					file: filename,
-					result: 'success',
-					output: outputData
-				});
-				callback();
-			}, function (err) {
-				result.push({
-					file: filename,
-					result: 'error',
-					message: err
-				});
-				callback();
-			});
-		}, function (err) {
-			done(null, result);
-		});
+    // Make the output directory
+    mkdir_p(outputDir, 755, function(err) {
+      if(err) {
+        console.log(err);
+      }
+
+      // For each file in this directory, make any necessary output directories
+      // and write the formatted file
+      async.forEach(dirs, function (dir, callback) {
+        var newDir = path.join(outputDir, dir);
+
+        mkdir_p( newDir, 755, function(err) {
+          if( err ) {
+            console.log(err);
+            return;
+          }
+          runCodePainter(dir, style, function (filename, sourceData, outputData) {
+            var newFile = path.join(outputDir, filename);
+            fs.writeFile( newFile, outputData );
+            callback();
+          }, function (err) {
+            callback();
+          });
+        });
+      }, function (err) {
+        done(null, result);
+      });
+    });
 	});
 
 	/*
@@ -138,7 +190,6 @@ module.exports = function (grunt) {
         for(var i = 0; i < diffed.length; i++) {
           var line = diffed[i];
           printDiffLine( line );
-          //console.log(line);
         }
 
 				if(diffed.length > 0) {

@@ -11,6 +11,16 @@ module.exports = function (grunt) {
 				}
 			}
 		},
+		styleformat: {
+			dist: {
+				src: ["test/examples"],
+				style: { 
+					"QuoteType": "double",
+					"SpaceAfterControlStatements": "present"
+        },
+        outputDir: 'formatted'
+			}
+		},
 		test: {
 			files: ['test/**/*.js']
 		},
